@@ -2,35 +2,59 @@ import Foundation
 
 struct Countdown {
     var text: String
+    var seconds: Int
     var show: Bool
 
-    static func build(wakeupTime: String, showBeforeHours: Int) -> Countdown {
-        Countdown.build(wakeupTime: wakeupTime, showBeforeHours: showBeforeHours, date: Date())
+    static func build(shedules: [ScheduleParameters], showBefore: String, hideAfter: String) -> Countdown {
+        build(shedules: shedules, showBefore: showBefore, hideAfter: hideAfter, date: Date())
     }
 
-    static func build(wakeupTime: String, showBeforeHours: Int, date: Date) -> Countdown {
-        let calendar = Calendar.current
+    static func build(shedules: [ScheduleParameters], showBefore: String, hideAfter: String, date: Date) -> Countdown {
+        shedules.flatMap { shedule in
+            build(shedule: shedule, showBefore: showBefore, hideAfter: hideAfter, date: date)
+        }.filter { countdown in
+            countdown.show
+        }
+        .min(by: { $0.seconds < $1.seconds }) ?? Countdown(text: "", seconds: 0, show: false)
+    }
 
-        let wakeupComponents = wakeupTime.split(separator: ":")
-        guard wakeupComponents.count == 2,
-              let wakeupHour = Int(wakeupComponents[0]),
-              let wakeupMinute = Int(wakeupComponents[1])
-        else {
-            return Countdown(text: "Error", show: false)
+    static func build(shedule: ScheduleParameters, showBefore: String, hideAfter: String, date: Date) -> [Countdown] {
+        if !shedule.isChecked {
+            return []
         }
 
-        var dateComponents = DateComponents()
-        dateComponents.hour = wakeupHour
-        dateComponents.minute = wakeupMinute
-        let nextWakeupTime = calendar.nextDate(after: date, matching: dateComponents, matchingPolicy: .nextTime)!
-        let remainingSeconds = calendar.dateComponents([.second], from: date, to: nextWakeupTime).second!
+        let calendar = Calendar.current
 
-        let hours = remainingSeconds / 3_600
-        let minutes = (remainingSeconds % 3_600) / 60
+        return shedule.toDateComponents(date: date)
+            .map { component in
+                calendar.nextDate(after: date, matching: component, matchingPolicy: .nextTime)
+            }
+            .filter { nextDate in nextDate != nil }
+            .map { nextDate in
+                calendar.dateComponents([.second], from: date, to: nextDate!).second
+            }
+            .filter { remainingSeconds in remainingSeconds != nil }
+            .map { remainingSeconds in
+                let seconds = remainingSeconds!
+                let hours = seconds / 3_600
+                let minutes = (seconds % 3_600) / 60
 
-        return Countdown(
-            text: String(format: "%02d:%02d", hours, minutes),
-            show: remainingSeconds <= (showBeforeHours * 3_600)
-        )
+                return Countdown(
+                    text: String(format: "%02d:%02d", hours, minutes),
+                    seconds: seconds,
+                    show: seconds <= timeToSeconds(time: showBefore)! && seconds >= timeToSeconds(time: hideAfter)!
+                )
+            }
+    }
+
+    private static func timeToSeconds(time: String) -> Int? {
+        let timeComponents = time.split(separator: ":")
+        guard timeComponents.count == 2,
+              let hour = Int(timeComponents[0]),
+              let minute = Int(timeComponents[1])
+        else {
+            return nil
+        }
+        return hour * 3_600 + minute * 60
     }
 }

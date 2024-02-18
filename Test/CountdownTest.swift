@@ -1,44 +1,82 @@
 import XCTest
 
-final class Test: XCTestCase {
+final class CountdownTest: XCTestCase {
     func date(time: String) -> Date {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy/MM/dd HH:mm"
         return formatter.date(from: "2000/01/01 \(time)")!
     }
 
-    func testShowing() throws {
-        let countdown = Countdown.build(wakeupTime: "01:00", showBeforeHours: 1, date: date(time: "00:00"))
+    func testShowingDaily() throws {
+        let countdown = Countdown.build(shedules: [
+            ScheduleParameters(selectedFrequency: "Daily", selectedDays: Set(), selectedDate: Date(), selectedTime: date(time: "06:00"))
+        ], showBefore: "08:00", hideAfter: "03:00", date: date(time: "23:00"))
 
         XCTAssert(countdown.show == true)
-        XCTAssert(countdown.text == "01:00")
+        XCTAssert(countdown.text == "07:00")
     }
 
-    func testShowingPM() throws {
-        let countdown = Countdown.build(wakeupTime: "23:00", showBeforeHours: 1, date: date(time: "22:00"))
-
-        XCTAssert(countdown.show == true)
-        XCTAssert(countdown.text == "01:00")
-    }
-
-    func testShowingZeroHour() throws {
-        let countdown = Countdown.build(wakeupTime: "00:00", showBeforeHours: 1, date: date(time: "23:00"))
-
-        XCTAssert(countdown.show == true)
-        XCTAssert(countdown.text == "01:00")
-    }
-
-    func testNotShowing() throws {
-        let countdown = Countdown.build(wakeupTime: "00:00", showBeforeHours: 1, date: date(time: "22:59"))
+    func testNotShowingDailyTooSoon() throws {
+        let countdown = Countdown.build(shedules: [
+            ScheduleParameters(selectedFrequency: "Daily", selectedDays: Set(), selectedDate: Date(), selectedTime: date(time: "06:00"))
+        ], showBefore: "08:00", hideAfter: "03:00", date: date(time: "05:00"))
 
         XCTAssert(countdown.show == false)
-        XCTAssert(countdown.text == "01:01")
+        XCTAssert(countdown.text == "")
     }
 
-    func testNotShowingRightAfter() throws {
-        let countdown = Countdown.build(wakeupTime: "00:00", showBeforeHours: 1, date: date(time: "00:01"))
+    func testNotShowingDailyTooEarly() throws {
+        let countdown = Countdown.build(shedules: [
+            ScheduleParameters(selectedFrequency: "Daily", selectedDays: Set(), selectedDate: Date(), selectedTime: date(time: "06:00"))
+        ], showBefore: "08:00", hideAfter: "03:00", date: date(time: "12:00"))
 
         XCTAssert(countdown.show == false)
-        XCTAssert(countdown.text == "23:59")
+        XCTAssert(countdown.text == "")
+    }
+
+    func testShowingWeekly() throws {
+        let countdown = Countdown.build(shedules: [
+            ScheduleParameters(selectedFrequency: "Weekly", selectedDays: ["Su"], selectedDate: Date(), selectedTime: date(time: "06:00"))
+        ], showBefore: "08:00", hideAfter: "03:00", date: date(time: "23:00"))
+
+        XCTAssert(countdown.show == true)
+        XCTAssert(countdown.text == "07:00")
+    }
+
+    func testNotShowingWeekly() throws {
+        let countdown = Countdown.build(shedules: [
+            ScheduleParameters(selectedFrequency: "Weekly", selectedDays: ["Mo"], selectedDate: Date(), selectedTime: date(time: "06:00"))
+        ], showBefore: "08:00", hideAfter: "03:00", date: date(time: "23:00"))
+
+        XCTAssert(countdown.show == false)
+        XCTAssert(countdown.text == "")
+    }
+
+    func testShowingSpecificDay() throws {
+        let countdown = Countdown.build(shedules: [
+            ScheduleParameters(selectedFrequency: "Once", selectedDays: Set(), selectedDate: date(time: "08:00"), selectedTime: date(time: "08:00"))
+        ], showBefore: "08:00", hideAfter: "03:00", date: date(time: "03:00"))
+
+        XCTAssert(countdown.show == true)
+        XCTAssert(countdown.text == "05:00")
+    }
+
+    func testNotShowingSpecificDay() throws {
+        let countdown = Countdown.build(shedules: [
+            ScheduleParameters(selectedFrequency: "Once", selectedDays: Set(), selectedDate: date(time: "08:00"), selectedTime: date(time: "08:00"))
+        ], showBefore: "08:00", hideAfter: "03:00", date: date(time: "07:00"))
+
+        XCTAssert(countdown.show == false)
+        XCTAssert(countdown.text == "")
+    }
+
+    func testShowingCombination() throws {
+        let countdown = Countdown.build(shedules: [
+            ScheduleParameters(selectedFrequency: "Once", selectedDays: Set(), selectedDate: date(time: "08:00"), selectedTime: date(time: "08:00")),
+            ScheduleParameters(selectedFrequency: "Weekly", selectedDays: ["Su"], selectedDate: Date(), selectedTime: date(time: "06:00"))
+        ], showBefore: "08:00", hideAfter: "03:00", date: date(time: "23:00"))
+
+        XCTAssert(countdown.show == true)
+        XCTAssert(countdown.text == "07:00")
     }
 }
