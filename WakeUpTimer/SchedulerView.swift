@@ -67,6 +67,7 @@ struct SchedulerView: View {
                     Image(systemName: "plus")
                 }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             VStack(alignment: .leading, spacing: 20) {
                 // Start Countdown Section

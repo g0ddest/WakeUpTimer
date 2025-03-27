@@ -60,6 +60,7 @@ struct ScheduleRow: View {
             Spacer()
 
             Toggle("", isOn: $parameters.isChecked)
+                .toggleStyle(.switch)
         }.frame(maxWidth: .infinity, alignment: .leading)
     }
 }

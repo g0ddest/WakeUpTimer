@@ -5,20 +5,20 @@ struct Countdown {
     var seconds: Int
     var show: Bool
 
-    static func build(shedules: [ScheduleParameters], showBefore: String, hideAfter: String) -> Countdown {
-        build(shedules: shedules, showBefore: showBefore, hideAfter: hideAfter, date: Date())
+    static func build(shedules: [ScheduleParameters], showBefore: String, hideAfter: String, showAlways: Bool) -> Countdown {
+        build(shedules: shedules, showBefore: showBefore, hideAfter: hideAfter, date: Date(), showAlways: showAlways)
     }
 
-    static func build(shedules: [ScheduleParameters], showBefore: String, hideAfter: String, date: Date) -> Countdown {
+    static func build(shedules: [ScheduleParameters], showBefore: String, hideAfter: String, date: Date, showAlways: Bool) -> Countdown {
         shedules.flatMap { shedule in
-            build(shedule: shedule, showBefore: showBefore, hideAfter: hideAfter, date: date)
+            build(shedule: shedule, showBefore: showBefore, hideAfter: hideAfter, date: date, showAlways: showAlways)
         }.filter { countdown in
             countdown.show
         }
-        .min(by: { $0.seconds < $1.seconds }) ?? Countdown(text: "", seconds: 0, show: false)
+        .min(by: { $0.seconds < $1.seconds }) ?? Countdown(text: "", seconds: 0, show: showAlways)
     }
 
-    static func build(shedule: ScheduleParameters, showBefore: String, hideAfter: String, date: Date) -> [Countdown] {
+    static func build(shedule: ScheduleParameters, showBefore: String, hideAfter: String, date: Date, showAlways: Bool) -> [Countdown] {
         if !shedule.isChecked {
             return []
         }
@@ -40,9 +40,9 @@ struct Countdown {
                 let minutes = (seconds % 3_600) / 60
 
                 return Countdown(
-                    text: String(format: "%02d:%02d", hours, minutes),
+                    text: seconds <= timeToSeconds(time: showBefore)! && seconds >= timeToSeconds(time: hideAfter)! ? String(format: "%02d:%02d", hours, minutes) : "",
                     seconds: seconds,
-                    show: seconds <= timeToSeconds(time: showBefore)! && seconds >= timeToSeconds(time: hideAfter)!
+                    show: showAlways || (seconds <= timeToSeconds(time: showBefore)! && seconds >= timeToSeconds(time: hideAfter)!)
                 )
             }
     }

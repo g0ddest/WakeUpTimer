@@ -16,22 +16,49 @@ struct StatusBarApp: App {
 
     @State
     var countdown = Countdown(text: "", seconds: 0, show: false)
+    @Environment(\.openWindow) private var openWindow
+    @State private var isSchedulerOpen = false
+    
+    init() {
+        NSApplication.shared.setActivationPolicy(.accessory)
+    }
 
     var body: some Scene {
-        WindowGroup {
+        
+        WindowGroup(id: "scheduler") {
             SchedulerView()
+                .onAppear{
+                    isSchedulerOpen = true
+                }
+                .onDisappear {
+                    isSchedulerOpen = false
+                }
         }
 
         MenuBarExtra(isInserted: $countdown.show) {
+            Button("Settings") {
+                if !isSchedulerOpen {
+                        openWindow(id: "scheduler")
+                        isSchedulerOpen = true
+                } else {
+                    NSApplication.shared.activate(ignoringOtherApps: true)
+                }
+            }
+            Divider()
             Button("Quit") {
                 NSApplication.shared.terminate(nil)
-            }.keyboardShortcut("q")
+            }
         } label: {
             VStack {
                 Image(systemName: "moon.stars.circle")
                 Text(countdown.text)
             }.onReceive(timerSubscription) { _ in
-                countdown = Countdown.build(shedules: loadSchedules(), showBefore: countdownStartString, hideAfter: countdownEndString)
+                countdown = Countdown.build(
+                    shedules: loadSchedules(),
+                    showBefore: countdownStartString,
+                    hideAfter: countdownEndString,
+                    showAlways: showMenu == "always"
+                )
             }
         }
     }
