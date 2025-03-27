@@ -16,18 +16,19 @@ struct StatusBarApp: App {
 
     @State
     var countdown = Countdown(text: "", seconds: 0, show: false)
-    @Environment(\.openWindow) private var openWindow
-    @State private var isSchedulerOpen = false
-    
+    @Environment(\.openWindow)
+    private var openWindow
+    @State
+    private var isSchedulerOpen = false
+
     init() {
         NSApplication.shared.setActivationPolicy(.accessory)
     }
 
     var body: some Scene {
-        
         WindowGroup(id: "scheduler") {
             SchedulerView()
-                .onAppear{
+                .onAppear {
                     isSchedulerOpen = true
                 }
                 .onDisappear {
@@ -38,8 +39,8 @@ struct StatusBarApp: App {
         MenuBarExtra(isInserted: $countdown.show) {
             Button("Settings") {
                 if !isSchedulerOpen {
-                        openWindow(id: "scheduler")
-                        isSchedulerOpen = true
+                    openWindow(id: "scheduler")
+                    isSchedulerOpen = true
                 } else {
                     NSApplication.shared.activate(ignoringOtherApps: true)
                 }
