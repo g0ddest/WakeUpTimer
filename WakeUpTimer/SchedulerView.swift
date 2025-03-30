@@ -70,6 +70,7 @@ struct SchedulerView: View {
                 }) {
                     Image(systemName: "plus")
                 }
+                .buttonStyle(.plain)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
