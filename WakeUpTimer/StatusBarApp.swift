@@ -51,8 +51,11 @@ struct StatusBarApp: App {
             }
         } label: {
             VStack {
-                Image(systemName: "moon.stars.circle")
-                Text(countdown.text)
+                if countdown.text == "" {
+                    Image(systemName: "moon.stars.circle")
+                } else {
+                    Image(nsImage: createStatusImage(text: countdown.text))
+                }
             }.onReceive(timerSubscription) { _ in
                 countdown = Countdown.build(
                     shedules: loadSchedules(),
@@ -69,5 +72,30 @@ struct StatusBarApp: App {
             return decoded
         }
         return []
+    }
+
+    private func createStatusImage(text: String) -> NSImage {
+        let size = NSSize(width: 45, height: 15)
+        let image = NSImage(size: size)
+        image.lockFocus()
+
+        let backgroundColor = NSColor.red
+        backgroundColor.setFill()
+        NSBezierPath(roundedRect: NSRect(origin: .zero, size: size), xRadius: 6, yRadius: 6).fill()
+
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.alignment = .center
+
+        let attributes: [NSAttributedString.Key: Any] = [
+            .foregroundColor: NSColor.white,
+            .font: NSFont.systemFont(ofSize: 12),
+            .paragraphStyle: paragraphStyle
+        ]
+
+        let attributedString = NSAttributedString(string: text, attributes: attributes)
+        attributedString.draw(in: NSRect(x: 0, y: 0, width: size.width, height: size.height))
+
+        image.unlockFocus()
+        return image
     }
 }
