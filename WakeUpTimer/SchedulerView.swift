@@ -40,7 +40,7 @@ struct SchedulerView: View {
     var body: some View {
         VStack(alignment: .leading) {
             List {
-                ForEach(schedules.indices, id: \.self) { index in
+                ForEach(Array(schedules.enumerated()), id: \.element.id) { index, _ in
                     ScheduleRow(parameters: Binding(
                         get: { schedules[index] },
                         set: {
@@ -58,6 +58,10 @@ struct SchedulerView: View {
                             }
                         }
                     }
+                }
+                .onMove { fromOffsets, toOffset in
+                    schedules.move(fromOffsets: fromOffsets, toOffset: toOffset)
+                    saveSchedules()
                 }
                 Button(action: {
                     let newSchedule = ScheduleParameters(selectedFrequency: "Once", selectedDays: [], selectedDate: Date(), selectedTime: Date(), isChecked: true)
