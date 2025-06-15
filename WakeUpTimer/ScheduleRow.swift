@@ -23,8 +23,14 @@ struct ScheduleRow: View {
             .pickerStyle(MenuPickerStyle())
             .frame(width: 100)
             .labelsHidden()
-            .onChange(of: parameters.selectedFrequency, perform: { _ in
+            .onChange(of: parameters.selectedFrequency, perform: { option in
                 parameters.selectedDays = []
+                if option == "Once" {
+                    let calendar = Calendar.current
+                    let now = Date()
+                    let hour = calendar.component(.hour, from: now)
+                    parameters.selectedDate = hour < 12 ? now : calendar.date(byAdding: .day, value: 1, to: now) ?? now
+                }
             })
 
             // Day of the week Picker (for Weekly)
